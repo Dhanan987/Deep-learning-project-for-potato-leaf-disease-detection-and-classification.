@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Potato Leaf Disease Detection</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #16a085, #27ae60);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            width: 400px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        input[type="file"] {
+            margin-bottom: 15px;
+        }
+
+        button {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        button:hover {
+            background: #1e8449;
+        }
+
+        img {
+            margin-top: 15px;
+            max-width: 100%;
+            display: none;
+            border-radius: 10px;
+        }
+
+        .result {
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .confidence {
+            margin-top: 5px;
+            color: gray;
+        }
+
+        .loading {
+            margin-top: 10px;
+            color: orange;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>🍃 Potato Leaf Disease Detection</h2>
+
+    <form id="form">
+        <input type="file" id="imageInput" name="image" accept="image/*" required>
+        <br>
+        <button type="submit">Predict</button>
+    </form>
+
+    <div class="loading" id="loading">Predicting...</div>
+
+    <img id="preview">
+
+    <div class="result" id="result"></div>
+    <div class="confidence" id="confidence"></div>
+</div>
+
+<script>
+    const form = document.getElementById("form");
+    const imageInput = document.getElementById("imageInput");
+    const preview = document.getElementById("preview");
+    const result = document.getElementById("result");
+    const confidence = document.getElementById("confidence");
+    const loading = document.getElementById("loading");
+
+    // Image preview
+    imageInput.addEventListener("change", function () {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            preview.src = e.target.result;
+            preview.style.display = "block";
+        }
+        reader.readAsDataURL(this.files[0]);
+    });
+
+    // Form submit
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        loading.style.display = "block";
+        result.innerHTML = "";
+        confidence.innerHTML = "";
+
+        const formData = new FormData();
+        formData.append("image", imageInput.files[0]);
+
+        fetch("/predict", {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            loading.style.display = "none";
+
+            if (data.error) {
+                result.innerHTML = data.error;
+                return;
+            }
+
+            result.innerHTML = "Prediction: " + data.prediction;
+            confidence.innerHTML = "Confidence: " + data.confidence;
+        })
+        .catch(() => {
+            loading.style.display = "none";
+            result.innerHTML = "Server Error!";
+        });
+    });
+</script>
+
+</body>
+</html>
